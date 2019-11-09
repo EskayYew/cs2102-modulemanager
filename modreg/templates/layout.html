@@ -49,8 +49,13 @@
         <a href="{{ url_for('main.faq') }}"
         class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">FAQ</a>
       {% if current_user.is_authenticated %}
+      {% if current_user.is_super %}
+      <a href="{{ url_for('admins.adminHome')}}"
+      class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Admin Panel</a>
+      {% else %}
       <a href="{{ url_for('studentUsers.studentHome')}}"
         class="w3-bar-item w3-button w3-hide-small w3-padding-large w3-hover-white">Student Panel</a>
+      {% endif %}  
       <a href="{{ url_for('main.logout')}}"
         class="w3-bar-item  w3-button w3-hide-small w3-padding-large w3-hover-white">Logout</a>
       {% endif %}
@@ -70,7 +75,7 @@
   {% if messages %}
   <div class="w3-container w3-center w3-orange">
     <br><br><br>
-    <span class="jb-font-size-60pts">{% for category,message in messages %}</span>
+    <span class="custom-font-size-60pts">{% for category,message in messages %}</span>
     <div class="{{ category }}">{{ message }}</div><br>
     {% endfor %}
   </div>

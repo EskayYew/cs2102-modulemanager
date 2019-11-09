@@ -38,6 +38,9 @@
 .custom-element-width-50 {width:50%;}
 .custom-element-width-30 {width:30%;}
 
+.custom-button-table {background-color: white; border: 1px solid #555555; border-radius:4px; color: black; padding: 2px 4px; text-align: center; text-decoration: none; display: inline-block; margin-right:5px; font-size: 16px; -webkit-transition-duration: 0.4s; /* Safari */ transition-duration: 0.4s; cursor: pointer;}
+.custom-button-table:hover {background-color: #555555; color: white;}
+
 .custom-button-small {background-color: white; border: 1px solid #555555; border-radius:4px; color: black; padding: 8px 24px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 4px 2px; -webkit-transition-duration: 0.4s; /* Safari */ transition-duration: 0.4s; cursor: pointer;}
 .custom-button-small:hover {background-color: #555555; color: white;}
 

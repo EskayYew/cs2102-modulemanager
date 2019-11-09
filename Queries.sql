@@ -68,12 +68,12 @@ BEGIN
 	IF (TG_OP = 'UPDATE') AND crypt(NEW.password, gen_salt('bf'))::varchar(100) = OLD.password::varchar(100)
 	THEN RETURN NEW;
 	ELSE
-		RETURN (NEW.uid, crypt(NEW.password, gen_salt('bf'))::varchar(100), NEW.is_super);
+		RETURN (NEW.id, crypt(NEW.password, gen_salt('bf'))::varchar(100), NEW.is_super);
 	END IF;
 END;
 $aab$ LANGUAGE plpgsql;
 CREATE TRIGGER add_user 
-BEFORE INSERT OR UPDATE ON Users
+BEFORE INSERT OR UPDATE ON webusers
 FOR EACH ROW 
 EXECUTE PROCEDURE hash_proc();
 
@@ -81,7 +81,7 @@ EXECUTE PROCEDURE hash_proc();
 
 -- Use this to ensure that every student has at least one major/add students into the db
 CREATE OR REPLACE PROCEDURE create_student_user(
-	uid varchar(100) DEFAULT NULL, 
+	id varchar(100) DEFAULT NULL, 
 	pw varchar(100) DEFAULT NULL, 
 	name varchar(100) DEFAULT NULL, 
 	enroll date DEFAULT NULL, 
@@ -90,12 +90,11 @@ CREATE OR REPLACE PROCEDURE create_student_user(
 AS
 $csu$
 BEGIN
-	INSERT INTO Users VALUES (uid, pw, False);
-	INSERT INTO Students VALUES (uid, name, enroll);
-	INSERT INTO Majoring VALUES (uid, major);
-	-- If the country field is set to anything other than default then we add an exchange entity
+	INSERT INTO webusers VALUES (id, pw, False);
+	INSERT INTO Students VALUES (id, name, enroll);
+	INSERT INTO Majoring VALUES (id, major);
 	IF country <> 'LOCAL'
-	THEN INSERT INTO Exchanges VALUES (uid, country);
+	THEN INSERT INTO Exchanges VALUES (id, country);
 	END IF;
 EXCEPTION
 	WHEN SQLSTATE '23502' THEN -- pkey error
@@ -152,7 +151,7 @@ CREATE OR REPLACE FUNCTION compute_workload(id varchar(50))
 RETURNS int AS
 $c_w$
 BEGIN
-	IF NOT EXISTS (SELECT 1 FROM Students S WHERE S.uid = id)
+	IF NOT EXISTS (SELECT 1 FROM Students S WHERE S.id = id)
 	THEN
 		RAISE EXCEPTION 'Error: this student does not exist';
 	END IF;
@@ -160,7 +159,7 @@ BEGIN
 		  	FROM modules M 
 			WHERE EXISTS (SELECT 1
 						  FROM Gets G
-			              WHERE G.uid = id AND M.modcode = G.modcode   
+			              WHERE G.id = id AND M.modcode = G.modcode   
 						 )
 			), 0);
 END;
@@ -189,7 +188,7 @@ BEGIN
 			     -- Check if this module is indeed taken by the student											
 			     EXISTS (SELECT 1 
 					     FROM Gets G
-		 			     WHERE G.uid = id AND G.modcode = L2.modcode AND G.lnum = L2.lnum 
+		 			     WHERE G.id = id AND G.modcode = L2.modcode AND G.lnum = L2.lnum 
 		 		        )
 		       )
 		);		 
@@ -228,7 +227,7 @@ FOR EACH ROW
 EXECUTE PROCEDURE remove_cyclic_prereq()
 				       
 -- DFS to find all the modules to be completed for student (id) to qualify for the module (wantt)				       
-CREATE OR REPLACE FUNCTION DFS_fulfill(id varchar(100), wantt varchar(100), need varchar(100)[])
+CREATE OR REPLACE FUNCTION DFS_fulfill(student_id varchar(100), wantt varchar(100), need varchar(100)[])
 RETURNS varchar(100)[] AS
 $DFS$
 DECLARE
@@ -239,43 +238,43 @@ BEGIN
 	-- The hierarchy is a DAG so there is no need to flag visited node
 	FOR r IN (SELECT * FROM Prerequisites PP where PP.want = wantt) LOOP
 		mc := r.need;
-		IF mc = ANY(DFS_fulfill(id, mc, need)) AND mc != ALL(need)
+		IF mc = ANY(DFS_fulfill(student_id, mc, need)) AND mc != ALL(need)
 		THEN
 			need := need || mc;
 		END IF;
 	END LOOP;
 	IF NOT EXISTS (SELECT 1
 				   FROM Completions C
-				   WHERE C.modcode = wantt and C.uid = id
+				   WHERE C.modcode = wantt and C.id = student_id
 				  )
 	THEN
 		need := need || wantt;
 	END IF;
 	RETURN need;
 END; 
-$DFS$ LANGUAGE plpgsql
+$DFS$ LANGUAGE plpgsql;
 
 -- The function that we use on the interface
-CREATE OR REPLACE FUNCTION findNeededModules(id varchar(100), modcode varchar(100))
+CREATE OR REPLACE FUNCTION findNeededModules(student_id varchar(100), modcode varchar(100))
 RETURNS text AS
 $n$
 DECLARE
 	arr varchar(100)[];
 BEGIN
-	arr := DFS_fulfill(id, modcode, '{}');
+	arr := DFS_fulfill(student_id, modcode, '{}');
 	arr := arr[0:array_length(arr, 1)-1];
 	RETURN array_to_string(arr,', ');
 END;
 $n$ LANGUAGE plpgsql;
 		    
 -- Compute the year of the student which equals to the ceil(return_value)		    
-CREATE OR REPLACE FUNCTION compute_year(id varchar(100))
+CREATE OR REPLACE FUNCTION compute_year(student_id varchar(100))
 RETURNS numeric AS
 $cy$
 BEGIN
 	RETURN ROUND(EXTRACT(epoch from(now() - (SELECT enroll
 				   			  FROM Students S
-							  WHERE S.uid = id
+							  WHERE S.id = student_id
 				    ))/31557600)::numeric, 2);
 END;
 $cy$ LANGUAGE plpgsql;
@@ -289,53 +288,53 @@ BEGIN
 	-- Check if the student had completed the module before or a preclusion
 	IF EXISTS (SELECT 1 
 			   FROM Completions C 
-			   WHERE C.uid  = new.uid AND C.modcode = new.modcode 
+			   WHERE C.id  = new.id AND C.modcode = new.modcode 
 			  )
 		  OR
 		  EXISTS (SELECT 1
 				  FROM Completions C
-				  WHERE C.uid = new.uid 
+				  WHERE C.id = new.id 
 				  AND EXISTS (SELECT 1 
 							  FROM Preclusions P
 							  WHERE P.modcode = new.modcode AND C.modcode = P.precluded 
 							 )
 				 )
 	THEN 
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion completed before'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion completed before'::varchar(100));
 	-- If currently subscribing to the mod or a preclusion then don't allow
 	ELSIF EXISTS (SELECT 1 
 				  FROM Gets C 
-				  WHERE C.uid  = new.uid AND C.modcode = new.modcode 
+				  WHERE C.id  = new.id AND C.modcode = new.modcode 
 				 )
 		  OR
 		  EXISTS (SELECT 1
 				  FROM Gets C
-				  WHERE C.uid = new.uid 
+				  WHERE C.id = new.id 
 				  AND EXISTS (SELECT 1 
 							  FROM Preclusions P
 							  WHERE P.modcode = new.modcode AND C.modcode = P.precluded 
 							 )
 				 )
 	THEN
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion currently subscribed to'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion currently subscribed to'::varchar(100));
 	--If admin made the bid then all checks below are bypassed
 	ELSIF EXISTS (SELECT 1
 			   FROM Admins A
-			   WHERE A.uid = new.uid_req 
+			   WHERE A.id = new.id_req 
 			  )
 	THEN
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, True , 'Module added by an admin.'::varchar(100));	
-	ELSIF (new.uid_req <> new.uid) -- A student can only bid for herself
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module added by an admin.'::varchar(100));	
+	ELSIF (new.id_req <> new.id) -- A student can only bid for herself
 	THEN
 		RAISE EXCEPTION 'Error: mismatching IDs';
 		RETURN NULL;
 	--If the student is an exchange student then add him/ her
 	ELSIF EXISTS (SELECT 1 
 			   FROM Exchanges E
-			   WHERE E.uid = new.uid
+			   WHERE E.id = new.id
 			  )
 	THEN 
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
 	
 	-- Check if the student has all prerequisites completed
 	ELSIF EXISTS (SELECT 1 
@@ -343,22 +342,22 @@ BEGIN
 				  WHERE P.want = new.modcode 
 				  AND NOT EXISTS (SELECT 1
 				  				  FROM Completions C
-								  WHERE C.modcode = P.need AND C.uid = new.uid 
+								  WHERE C.modcode = P.need AND C.id = new.id 
 				  				 )
 	  			 )
 	THEN 
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Uncompleted prerequisites'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Uncompleted prerequisites'::varchar(100));
 	-- Check if the student made request before deadline	
 	ELSIF new.bid_time > (SELECT deadline 
 						  FROM Lectures L
 						  WHERE L.lnum = new.lnum AND L.modcode = new.modcode)
 	THEN 
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Request made after deadline'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Request made after deadline'::varchar(100));
 	
 	-- Check for quota
-	ELSIF (SELECT COUNT(DISTINCT G.uid) 
+	ELSIF (SELECT COUNT(DISTINCT G.id) 
 		   FROM Gets G 
-		   WHERE G.lnum = new.lnum AND G.modcode = new.modcode AND G.uid <> new.uid
+		   WHERE G.lnum = new.lnum AND G.modcode = new.modcode AND G.id <> new.id
 		  ) >= (SELECT L.quota 
 			   FROM Lectures L
 			   WHERE L.lnum = new.lnum AND L.modcode = new.modcode
@@ -374,38 +373,37 @@ BEGIN
 				   WHERE M.modcode = new.modcode 
 				   AND EXISTS (SELECT 1
 							   FROM (Majoring NATURAL JOIN Majors) AS MM
- 							   WHERE MM.uid = new.uid AND MM.fname = M.fname
+ 							   WHERE MM.id = new.id AND MM.fname = M.fname
 				   )
 	
-			) AND (compute_year(new.uid) > 2) AND (compute_workload(new.uid) < 23)
+			) AND (compute_year(new.id) > 2) AND (compute_workload(new.id) < 23)
 		
 		THEN
-			RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, True , 'Module succesfully added'::varchar(100));	
+			RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module succesfully added'::varchar(100));	
 		
 		ELSE
-			RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Quota exceeded'::varchar(100));
+			RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Quota exceeded'::varchar(100));
 		END IF;
-	-- Then whether they have maximum workload
 	ELSIF (SELECT SS.total
-			FROM (SELECT S.uid, COALESCE(SUM(GM.workload),0) AS total
+			FROM (SELECT S.id, COALESCE(SUM(GM.workload),0) AS total
 	  		      FROM Students S 
       			  LEFT JOIN (Gets G NATURAL JOIN Modules M) AS GM 
-	  			  ON GM.uid = S.uid 
-                  GROUP BY S.uid) AS SS
-            WHERE SS.uid = new.uid) - compute_year(new.uid) > 23
+	  			  ON GM.id = S.id 
+                  GROUP BY S.id) AS SS
+            WHERE SS.id = new.id) - compute_year(new.id) > 23
 	THEN
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, False , 'Maximum workload exceeded'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Maximum workload exceeded'::varchar(100));
 	 
 	ELSE
-		RETURN (new.uid, new.uid_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
+		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
 	
 	END IF;
 	
-	EXCEPTION
+/* 	EXCEPTION
 		WHEN SQLSTATE '23503' THEN
 			RAISE EXCEPTION 'Error: The lecture slot does not exist ';
 		WHEN SQLSTATE '23505' THEN
-			RAISE EXCEPTION 'Error: This slot is already allocated to the student';
+			RAISE EXCEPTION 'Error: This slot is already allocated to the student'; */
 END;
 $hb$ LANGUAGE plpgsql;
 CREATE TRIGGER add_bid
@@ -419,7 +417,7 @@ RETURNS TRIGGER AS
 $pb$
 BEGIN
 	IF (new.status) THEN
-		INSERT INTO Gets VALUES (new.uid, new.modcode, new.lnum, false);
+		INSERT INTO Gets VALUES (new.modcode, new.lnum, new.id);
 	ELSE 
 		RAISE EXCEPTION '%', new.remark;
 	END IF;

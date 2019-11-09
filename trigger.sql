@@ -1,29 +1,8 @@
-import json
-from flask import Blueprint, request, render_template, url_for, redirect
-from modreg.main.forms import *
-from flask import Blueprint, render_template, url_for, redirect, request, flash
-from flask_login import login_user, current_user, logout_user, login_required
-from modreg.models import WebUsers
-from modreg import db
-
-main = Blueprint('main', __name__)
-
-
-@main.route("/")
-@main.route("/home")
-def home():
-    return render_template('main/home.html')
-
-
-@main.route("/")
-@main.route("/faqpage")
-def faq():
-    db.engine.execute("""
-    CREATE OR REPLACE FUNCTION handle_bid()
-    RETURNS TRIGGER AS 
-    $hb$
-    BEGIN
-	-- Check if the student had completed the module before or a preclusion
+CREATE OR REPLACE FUNCTION handle_bid()
+RETURNS TRIGGER AS 
+$hb$
+BEGIN
+	
 	IF EXISTS (SELECT 1 
 			   FROM Completions C 
 			   WHERE C.id  = new.id AND C.modcode = new.modcode 
@@ -39,7 +18,7 @@ def faq():
 				 )
 	THEN 
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion completed before'::varchar(100));
-	-- If currently subscribing to the mod or a preclusion then don't allow
+	
 	ELSIF EXISTS (SELECT 1 
 				  FROM Gets C 
 				  WHERE C.id  = new.id AND C.modcode = new.modcode 
@@ -55,18 +34,18 @@ def faq():
 				 )
 	THEN
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Module/preclusion currently subscribed to'::varchar(100));
-	--If admin made the bid then all checks below are bypassed
+	
 	ELSIF EXISTS (SELECT 1
-			   FROM  Webadmins A
+			   FROM Admins A
 			   WHERE A.id = new.id_req 
 			  )
 	THEN
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module added by an admin.'::varchar(100));	
-	ELSIF (new.id_req <> new.id) -- A student can only bid for herself
+	ELSIF (new.id_req <> new.id)
 	THEN
 		RAISE EXCEPTION 'Error: mismatching IDs';
 		RETURN NULL;
-	--If the student is an exchange student then add him/ her
+	
 	ELSIF EXISTS (SELECT 1 
 			   FROM Exchanges E
 			   WHERE E.id = new.id
@@ -74,7 +53,7 @@ def faq():
 	THEN 
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
 	
-	-- Check if the student has all prerequisites completed
+	
 	ELSIF EXISTS (SELECT 1 
 				  FROM Prerequisites P
 				  WHERE P.want = new.modcode 
@@ -85,14 +64,14 @@ def faq():
 	  			 )
 	THEN 
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Uncompleted prerequisites'::varchar(100));
-	-- Check if the student made request before deadline	
+	
 	ELSIF new.bid_time > (SELECT deadline 
 						  FROM Lectures L
 						  WHERE L.lnum = new.lnum AND L.modcode = new.modcode)
 	THEN 
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, False , 'Request made after deadline'::varchar(100));
 	
-	-- Check for quota
+	
 	ELSIF (SELECT COUNT(DISTINCT G.id) 
 		   FROM Gets G 
 		   WHERE G.lnum = new.lnum AND G.modcode = new.modcode AND G.id <> new.id
@@ -136,34 +115,15 @@ def faq():
 		RETURN (new.id, new.id_req, new.modcode, new.lnum, new.bid_time, True , 'Module successfully added'::varchar(100));
 	
 	END IF;
-
-    END;
-    $hb$ LANGUAGE plpgsql;
-    CREATE TRIGGER add_bid
-    BEFORE INSERT ON Bids
-    FOR EACH ROW
-    EXECUTE PROCEDURE handle_bid();
-    """)
-    return render_template('/main/faq.html')
-
-
-@main.route("/login", methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        loginId = form.userName.data
-        attemptedWebUser = WebUsers.query.filter_by(id=loginId).first()
-        # if user and bcrypt.check_password_hash(user.password, form.password.data):
-        if attemptedWebUser and form.password.data == attemptedWebUser.password:
-            login_user(attemptedWebUser)
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('main.home'))
-        else:
-            flash('Login Unsuccessful, Please Check user id and password', 'danger')
-    return render_template('/main/login.html', title='Login', form=form)
-
-
-@main.route("/logout", methods=['GET', 'POST'])
-def logout():
-    logout_user()
-    return redirect(url_for('main.home'))
+	
+/* 	EXCEPTION
+		WHEN SQLSTATE '23503' THEN
+			RAISE EXCEPTION 'Error: The lecture slot does not exist ';
+		WHEN SQLSTATE '23505' THEN
+			RAISE EXCEPTION 'Error: This slot is already allocated to the student'; */
+END;
+$hb$ LANGUAGE plpgsql;
+CREATE TRIGGER add_bid
+BEFORE INSERT ON Bids
+FOR EACH ROW
+EXECUTE PROCEDURE handle_bid();
