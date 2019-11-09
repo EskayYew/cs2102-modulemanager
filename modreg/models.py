@@ -8,13 +8,13 @@ from datetime import datetime
 from flask_user import roles_required, UserMixin
 
 
-class WebUsers(db.Model):
+class WebUsers(db.Model, UserMixin):
     """ defines table name """
     __tablename__ = 'webusers'
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    uid = db.Column(db.String(30), primary_key=True)
+    id = db.Column(db.String(30), primary_key=True)
     password = db.Column(db.String(30), nullable=False)
     # is super field determines if this uer is an admin
     is_super = db.Column(db.Boolean, nullable=False, default=False)
@@ -22,7 +22,7 @@ class WebUsers(db.Model):
     """ defines relationships and cascade delete constraints """
     students = db.relationship("Students", cascade="all,delete")
     webadmins = db.relationship("WebAdmins", cascade="all,delete")
-    bids = db.relationship("Bids", cascade="all,delete")
+    
 
 class WebAdmins(db.Model):
     """ defines table name """
@@ -30,9 +30,9 @@ class WebAdmins(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    # UID serves as a primary key as well as a FK which references webuser table
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    # id serves as a primary key as well as a FK which references webuser table
+    id = db.Column(db.String(30), db.ForeignKey(
+        'webusers.id'), primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     contact = db.Column(db.String(100))
 
@@ -43,9 +43,9 @@ class Students(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    # UID serves as a primary key as well as a FK which references webuser table
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    # id serves as a primary key as well as a FK which references webuser table
+    id = db.Column(db.String(30), db.ForeignKey(
+        'webusers.id'), primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     enroll = db.Column(db.Date, nullable=False)
 
@@ -57,6 +57,11 @@ class Students(db.Model):
     completions = db.relationship(
         "Completions", cascade="all, delete, save-update")
 
+    """ defines relationships """
+    exchanges = db.relationship("Exchanges", cascade="all,delete")
+    majoring = db.relationship("Majoring", cascade="all,delete")
+    minoring = db.relationship("Minoring", cascade="all,delete")
+
 
 class Exchanges(db.Model):
     """ defines table name """
@@ -64,9 +69,9 @@ class Exchanges(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    # UID serves as a primary key as well as a FK which references webuser table
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    # id serves as a primary key as well as a FK which references webuser table
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
     home_country = db.Column(db.String(100), nullable=False)
 
 
@@ -119,8 +124,8 @@ class Minoring(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
     min_name = db.Column(db.String(100), db.ForeignKey(
         'minors.min_name'), primary_key=True)
 
@@ -131,8 +136,8 @@ class Majoring(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes """
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
     maj_name = db.Column(db.String(100), db.ForeignKey(
         'majors.maj_name'), primary_key=True)
 
@@ -196,8 +201,7 @@ class Prerequisites(db.Model):
     """ defines attributes and key constraints"""
     modcode = db.Column(db.String(100), db.ForeignKey(
         'modules.modcode'), db.CheckConstraint('modcode <> prereq'), primary_key=True)
-    prereq = db.Column(db.String(100), db.ForeignKey(
-        'modules.modcode'), primary_key=True)
+    prereq = db.Column(db.String(100), primary_key=True)
 
 
 class Preclusions(db.Model):
@@ -208,8 +212,7 @@ class Preclusions(db.Model):
     """ defines attributes and key constraints"""
     modcode = db.Column(db.String(100), db.ForeignKey(
         'modules.modcode'), db.CheckConstraint('modcode <> precluded'), primary_key=True)
-    precluded = db.Column(db.String(100), db.ForeignKey(
-        'modules.modcode'), primary_key=True)
+    precluded = db.Column(db.String(100), primary_key=True)
 
 
 class Bids(db.Model):
@@ -218,8 +221,8 @@ class Bids(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes and key constraints"""
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'students.uid'), primary_key=True)
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
     modcode = db.Column(db.String(100), nullable=False, primary_key=True)
     lnum = db.Column(db.Integer, nullable=False, primary_key=True)
     status = db.Column(db.Boolean, default=True)
@@ -234,10 +237,10 @@ class Gets(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes and key constraints """
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'students.uid'), primary_key=True)
-    uid_adder = db.Column(db.String(30), db.ForeignKey(
-        'webusers.uid'), primary_key=True)
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
+    id_adder = db.Column(db.String(30), db.ForeignKey(
+        'webusers.id'), primary_key=True)
     modcode = db.Column(db.String(100), nullable=False, primary_key=True)
     lnum = db.Column(db.Integer, nullable=False, primary_key=True)
     is_audit = db.Column(db.Boolean, default=False)
@@ -250,7 +253,7 @@ class Completions(db.Model):
     __table_args__ = {'extend_existing': True}
 
     """ defines attributes and key constraints """
-    uid = db.Column(db.String(30), db.ForeignKey(
-        'students.uid'), primary_key=True)
+    id = db.Column(db.String(30), db.ForeignKey(
+        'students.id'), primary_key=True)
     modcode = db.Column(db.String(100), db.ForeignKey(
         'modules.modcode'), nullable=False, primary_key=True)

@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block style %}
+{% endblock style %}
+
+{% block content %}
+<div class="w3-light-blue w3-opacity w3-center w3-padding-64">
+  <div class="custom-table-width-80 custom-margin-center">
+    <br>
+    <br>
+    <h1>List of Lecture Groups under {{ modcode }}</h1><br>
+  </div>
+</div>
+
+<div class="w3-white w3-opacity w3-center w3-padding-64">
+  <div class="custom-table-width-80 custom-margin-center custom-text-align-fulljustifed">
+    <table class='w3-table'>
+      <tr class="custom-table-header, custome-table-border">
+        <th class="custom-table-border">Lecture Number</th>
+        <th class="custom-table-border">Quota</th>
+        <th class="custom-table-border">Bidding Deadline</th>
+      </tr>
+
+      {% for lecture in lectures %}
+      <tr class="custom-table-border">
+        <td><a class="custom-button-table" href="{{url_for('admins.adminViewSlots', modcode=lecture.modcode, lnum=lecture.lnum)}}"><i class="fa fa-pencil-square-o"
+              aria-hidden="true"></i></a>{{lecture.lnum}}</td>
+        <td>{{lecture.quota}}</td>
+        <td>{{lecture.deadline}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+
+<div class=" w3-opacity w3-center w3-padding-64">
+  <div class="custom-table-width-80 custom-margin-center">
+    <a class="custom-button-blue" href="{{url_for('admins.adminAddLecture', modcode=modcode)}}"><h4>Add a lecture group</h4></a><br>
+  </div>
+</div>
+{% endblock content %}

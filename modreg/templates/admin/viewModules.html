@@ -7,7 +7,7 @@
   <div class="custom-table-width-80 custom-margin-center">
     <br>
     <br>
-    <h1>Here are all the lecture slots you have gotten</h1><br>
+    <h1>List of modules</h1><br>
   </div>
 </div>
 
@@ -16,18 +16,14 @@
     <table class='w3-table'>
       <tr class="custom-table-header, custome-table-border">
         <th class="custom-table-border">Module</th>
-        <th class="custom-table-border">Lecture Number</th>
-        <th class="custom-table-border">Day</th>
-        <th class="custom-table-border">Start Time</th>
-        <th class="custom-table-border">End Time</th>
+        <th class="custom-table-border">Module Name</th>
       </tr>
-      {% for class in classes %}
+
+      {% for module in modules %}
       <tr class="custom-table-border">
-        <td>{{ class.modcode }}</td>
-        <td>{{ class.lnum }}</td>
-        <td>{{ class.day }}</td>
-        <td>{{ class.t_start }}</td>
-        <td>{{ class.t_end }}</td>
+        <td><a class="custom-button-table" href="{{url_for('admins.adminEditModule', modcode=module.modcode)}}"><i class="fa fa-pencil-square-o"
+              aria-hidden="true"></i></a>{{module.modcode}}</td>
+        <td>{{module.modname}}</td>
       </tr>
       {% endfor %}
     </table>
