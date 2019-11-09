@@ -71,10 +71,10 @@ def submitBids():
         try:
             db.engine.execute(bidQuery, valueTuple)
         except exc.SQLAlchemyError:
-            flash('DB exception submission', 'message')
+            flash('Bid submission not successful. please make sure you have entered the correct details', 'message')
             return redirect(url_for('studentUsers.submitBids'))
             
-        flash('Succesful submission', 'message')
+        flash('Bid submitted, please check your bidding result', 'message')
         return redirect(url_for('studentUsers.studentHome'))
 
     return render_template('studentUsers/submitBids.html', form=form, modules=modules)
@@ -82,7 +82,13 @@ def submitBids():
 
 @studentUsers.route("/viewbids", methods=['POST', 'GET'])
 def viewBids():
-    return render_template('studentUsers/viewBids.html')
+    query="""
+    SELECT * 
+    FROM bids
+    WHERE bids.id=%s;
+    """
+    bids=db.engine.execute(query, current_user.id).fetchall()
+    return render_template('studentUsers/viewBids.html', bids=bids)
 
 
 @studentUsers.route("/myclass")
@@ -95,3 +101,12 @@ def viewClasses():
     """
     classes = db.engine.execute(viewClassQuery, current_user.id).fetchall()
     return render_template('studentUsers/viewClasses.html', classes=classes)
+
+@studentUsers.route("/student/viewallmodules")
+def viewAllModules():
+    query="""
+    SELECT * 
+    FROM Modules;
+    """
+    modules=db.engine.execute(query).fetchall()
+    return render_template('studentUsers/viewAllModules.html',modules=modules)   

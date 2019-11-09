@@ -14,5 +14,18 @@ def viewModule(modcode):
     modcode=modcode 
     query = "SELECT * FROM modules WHERE modcode=%s LIMIT 1"
 
+    preclusion_query = """
+    SELECT * 
+    FROM preclusions 
+    WHERE modcode=%s
+    """
+    prereq_query = """
+    SELECT *
+    FROM prerequisites
+    WHERE want=%s;
+    """
+
+    preclude_mods = db.engine.execute(preclusion_query, modcode).fetchall()
+    prereq_mods = db.engine.execute(prereq_query, modcode).fetchall()
     thisModule = db.engine.execute(query, modcode).fetchall()
-    return render_template('modules/module.html', thisModule=thisModule)
+    return render_template('modules/module.html', thisModule=thisModule, prereq_mods=prereq_mods, preclude_mod=preclude_mods)

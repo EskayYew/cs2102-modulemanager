@@ -8,7 +8,7 @@
         <div class="w3-container w3-white w3-opacity">
                 <div class="custom-grid-container custom-table-width-80 custom-margin-center w3-padding-32">
                     {% for module in modules %}
-                    <a class="custom-disable-link" href="">
+                    <a class="custom-disable-link" href="{{ url_for('modules.viewModule', modcode=module.modcode)}}">
                         <div class="custom-grid-item custom-margin-top-bottom-20">{{ module.modcode}}</div>
                     </a>
                     {% endfor %}

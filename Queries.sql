@@ -418,8 +418,6 @@ $pb$
 BEGIN
 	IF (new.status) THEN
 		INSERT INTO Gets VALUES (new.modcode, new.lnum, new.id);
-	ELSE 
-		RAISE EXCEPTION '%', new.remark;
 	END IF;
 	RETURN NULL;
 	EXCEPTION
@@ -433,3 +431,18 @@ CREATE TRIGGER bid_proc
 AFTER INSERT ON Bids
 FOR EACH ROW 
 EXECUTE PROCEDURE proc_bid();
+
+CREATE OR REPLACE FUNCTION log_in(uid varchar(100), pw varchar(100))
+RETURNS boolean AS
+$log$
+BEGIN
+ RETURN EXISTS 
+ (SELECT 1 
+  FROM webusers U
+  WHERE
+   U.password = crypt(pw, (select password from webusers u2 WHERE u2.id = uid ))::varchar(100)
+ ); 
+END;
+$log$ LANGUAGE plpgsql;
+
+SELECT log_in(username, password);

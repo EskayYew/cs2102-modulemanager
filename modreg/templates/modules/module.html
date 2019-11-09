@@ -9,10 +9,23 @@
         <h1>{{thisModule[0].modcode}}</h1>
         <h3>{{thisModule[0].modname}}</h3>
         <p>{{thisModule[0].descriptions}}</p>
-        <a class="custom-button-small" href="{{url_for('studentUsers.viewModules')}}">Go Back</a>
+        <br>
+
+        {% if prereq_mods %}
+        <h3>Prerequisites:</h3>
+        {% for prereq_mod in prereq_mods %}
+          {{ mod.modcode }}<br>
+        {% endfor %}
+        {% endif %}
+
+        {% if preclude_mods %}
+        <h3>Preclusion:</h3>
+        {% for preclude_mod in preclude_mods %}
+          {{mod.modcode}}<br>
+        {% endfor %}
+        {% endif %}
   </div>
   <div class="custom-table-width-80 custom-margin-center custom-text-align-fulljustifed">
-
   </div>
 </div>
 {% endblock content %}

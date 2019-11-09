@@ -9,14 +9,18 @@
   <br><br>
   <div class=" w3-opacity w3-center w3-padding-16">
     <h2>
-      <h4>View your completed modules here</h4>
       <a href="{{ url_for('studentUsers.viewModules')}}" class="custom-button">My Modules</a>
     </h2>
   </div>
 
   <div class=" w3-opacity w3-center w3-padding-16">
+      <h2>
+        <a href="{{ url_for('studentUsers.viewAllModules')}}" class="custom-button">View All Modules</a>
+      </h2>
+    </div>
+
+  <div class=" w3-opacity w3-center w3-padding-16">
     <h2>
-      <h4>View your classes here</h4>
       <a href="{{ url_for('studentUsers.viewClasses')}}" class="custom-button">My classes
       </a>
     </h2>
@@ -24,14 +28,12 @@
 
   <div class=" w3-opacity w3-center w3-padding-16">
     <h2>
-      <h4>Submit your bidding for modules here</h4>
       <a href="{{ url_for('studentUsers.submitBids')}}" class="custom-button">Submit Bidding</a>
     </h2>
   </div>
 
   <div class=" w3-opacity w3-center w3-padding-16">
     <h2>
-      <h4>View your biddings for modules here</h4>
       <a href="{{ url_for('studentUsers.viewBids')}}" class="custom-button">View Bidding</a>
     </h2>
   </div>
