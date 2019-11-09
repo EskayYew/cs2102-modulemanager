@@ -20,10 +20,6 @@ def adminViewModule():
     modules=db.engine.execute(query).fetchall()
     return render_template('admin/viewModules.html',modules=modules)    
 
-@admins.route("/admin/addmodule")
-def adminAddModule():
-    return render_template('admin/addModule.html')
-
 @admins.route("/admin/viewlectures/<modcode>")
 def adminEditModule(modcode):
     query="""   
@@ -47,7 +43,7 @@ def adminViewSlots(modcode, lnum):
     """
     slots = db.engine.execute(slotsquery, slot).fetchall()
 
-    return render_template('admin/viewSlots.html', slots=slots)
+    return render_template('admin/viewSlots.html', slots=slots, modcode=modcode, lnum=lnum)
 
 @admins.route("/admin/viewOneSlot/<modcode>/<lnum>/<day>")
 def adminViewOneSlot(modcode, lnum, day):
@@ -77,7 +73,21 @@ def adminAddLecture(modcode):
         db.engine.execute(query,datatuple)
         return redirect(url_for('admins.adminEditModule', modcode=modcode))
     
-    return render_template('admin/addLecture.html', form=form)
+    return render_template('admin/addLecture.html', form=form, modcode=modcode)
+
+@admins.route("/admin/addslot/<modcode>/<lnum>", methods=['GET','POST'])
+def adminAddSlot(modcode,lnum):
+    form=AddSlotForm()
+    if form.validate_on_submit():
+        datatuple=(lnum, modcode, form.t_start.data, form.t_end.data, form.day.data)
+        query = """
+        INSERT INTO slots
+        VALUES (%s,%s,%s,%s,%s);
+        """
+        db.engine.execute(query,datatuple)
+        return redirect(url_for('admins.adminViewSlots', modcode=modcode))
+    
+    return render_template('admin/addSlot.html', form=form, lnum=lnum, modcode=modcode)
     
 
 

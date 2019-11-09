@@ -7,7 +7,7 @@
   <div class="custom-table-width-80 custom-margin-center custom-text-align-fulljustifed">
       <br>
       <br>
-      <h1 class="w3-center">Create a new lecture for {{modcode}} </h1>
+      <h1 class="w3-center">Create a new slot for {{modcode}} </h1>
   </div>
 </div>
 
@@ -19,47 +19,47 @@
                         {{ form.hidden_tag() }}
                         <fieldset class="form-grop">
                             <div class="form-grop">
-                                {{ form.lnum.label(class="form-control-label") }}<br>
-                                {% if form.lnum.errors %}
-                                {{ form.lnum(class="form-control form-control-lg is-invalid") }}
+                                {{ form.t_start.label(class="form-control-label") }}<br>
+                                {% if form.t_start.errors %}
+                                {{ form.t_start(class="form-control form-control-lg is-invalid") }}
                                 <div class="invalid-feedback">
-                                    {% for error in form.lnum.errors %}
+                                    {% for error in form.t_start.errors %}
                                     <span> {{ error }} </span>
                                     {% endfor %}
                                 </div>
                                 {% else %}
                                 <div class="custom-element-width-50 custom-margin-center">
-                                    {{ form.lnum(class="form-control form-control-lg") }}
+                                    {{ form.t_start(class="form-control form-control-lg") }}
                                 </div>
                                 {% endif %}
                             </div><br>
                             <div class="form-grop">
-                                {{ form.quota.label(class="form-control-label") }}<br>
-                                {% if form.quota.errors %}
-                                {{ form.quota(class="form-control form-control-lg is-invalid") }}
+                                {{ form.t_end.label(class="form-control-label") }}<br>
+                                {% if form.t_end.errors %}
+                                {{ form.t_end(class="form-control form-control-lg is-invalid") }}
                                 <div class="invalid-feedback">
-                                    {% for error in form.quota.errors %}
+                                    {% for error in form.t_end.errors %}
                                     <span> {{ error }}</span>
                                     {% endfor %}
                                 </div>
                                 {% else %}
                                 <div class="custom-element-width-50 custom-margin-center">
-                                    {{ form.quota(class="form-control form-control-lg") }}
+                                    {{ form.t_end(class="form-control form-control-lg") }}
                                 </div>
                                 {% endif %}
                             </div><br>
                             <div class="form-grop">
-                                {{ form.deadline.label(class="form-control-label") }}<br>
-                                {% if form.deadline.errors %}
-                                {{ form.deadline(class="form-control form-control-lg is-invalid") }}
+                                {{ form.day.label(class="form-control-label") }}<br>
+                                {% if form.day.errors %}
+                                {{ form.day(class="form-control form-control-lg is-invalid") }}
                                 <div class="invalid-feedback">
-                                    {% for error in form.deadline.errors %}
+                                    {% for error in form.day.errors %}
                                     <span> {{ error }} </span>
                                     {% endfor %}
                                 </div>
                                 {% else %}
                                 <div class="custom-element-width-50 custom-margin-center">
-                                    {{ form.deadline(class="form-control form-control-lg") }}
+                                    {{ form.day(class="form-control form-control-lg") }}
                                 </div>
                                 {% endif %}
                             </div><br>
