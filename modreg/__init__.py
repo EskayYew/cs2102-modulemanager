@@ -22,9 +22,11 @@ def create_app(config_class=Config):
 
     from modreg.main.routes import main
     from modreg.studentUsers.routes import studentUsers
+    from modreg.modules.routes import modules
 
     app.register_blueprint(main)
     app.register_blueprint(studentUsers)
+    app.register_blueprint(modules)
 
     return app
 

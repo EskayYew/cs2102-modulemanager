@@ -4,10 +4,33 @@
 
 {% block content %}
 <div class="w3-light-blue w3-opacity w3-center w3-padding-64">
-  <div class="jb-table-width-80 jb-margin-center jb-text-align-fulljustifed">
-      <br>
-      <br>
-      <h1 class="jb-text-align-left">This page is where you can view the classes you are in right now</h1><br>
+  <div class="custom-table-width-80 custom-margin-center">
+    <br>
+    <br>
+    <h1>Here are all the lecture slots you have gotten</h1><br>
+  </div>
+</div>
+
+<div class="w3-white w3-opacity w3-center w3-padding-64">
+  <div class="custom-table-width-80 custom-margin-center custom-text-align-fulljustifed">
+    <table class='w3-table'>
+      <tr class="custom-table-header, custome-table-border">
+        <th class="custom-table-border">Module</th>
+        <th class="custom-table-border">Lecture Number</th>
+        <th class="custom-table-border">Day</th>
+        <th class="custom-table-border">Start Time</th>
+        <th class="custom-table-border">End Time</th>
+      </tr>
+      {% for class in classes %}
+      <tr class="custom-table-border">
+        <td>{{ class.modcode }}</td>
+        <td>{{ class.lnum }}</td>
+        <td>{{ class.day }}</td>
+        <td>{{ class.t_start }}</td>
+        <td>{{ class.t_end }}</td>
+      </tr>
+      {% endfor %}
+    </table>
   </div>
 </div>
 {% endblock content %}

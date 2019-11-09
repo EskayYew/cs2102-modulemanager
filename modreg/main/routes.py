@@ -11,8 +11,7 @@ main = Blueprint('main', __name__)
 @main.route("/")
 @main.route("/home")
 def home():
-    user = db.engine.execute("SELECT * FROM webuser")
-    return render_template('main/home.html', user=user)
+    return render_template('main/home.html')
     
 @main.route("/")
 @main.route("/faqpage")
@@ -23,14 +22,15 @@ def faq():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        attemptedWebUser = WebUsers.query.filter_by(uid=form.userName.data).first()
+        loginId = form.userName.data 
+        attemptedWebUser = WebUsers.query.filter_by(id=loginId).first()
         #if user and bcrypt.check_password_hash(user.password, form.password.data):
         if attemptedWebUser and form.password.data == attemptedWebUser.password:
             login_user(attemptedWebUser)
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('main.home'))
         else:
-            flash('Login Unsuccessful, Please Check room number and password', 'danger')
+            flash('Login Unsuccessful, Please Check user id and password', 'danger')
     return render_template('/main/login.html', title='Login', form=form)
 
 
