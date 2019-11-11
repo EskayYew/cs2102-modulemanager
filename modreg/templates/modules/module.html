@@ -14,14 +14,14 @@
         {% if prereq_mods %}
         <h3>Prerequisites:</h3>
         {% for prereq_mod in prereq_mods %}
-          {{ mod.modcode }}<br>
+          <h5>{{ prereq_mod.need }}</h5>
         {% endfor %}
         {% endif %}
 
         {% if preclude_mods %}
         <h3>Preclusion:</h3>
         {% for preclude_mod in preclude_mods %}
-          {{mod.modcode}}<br>
+          {{preclude_mod.modcode}}<br>
         {% endfor %}
         {% endif %}
   </div>

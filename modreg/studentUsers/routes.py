@@ -68,11 +68,13 @@ def submitBids():
         (id,id_req, modcode, lnum, bid_time) 
         VALUES (%s, %s, %s, %s, %s)"""
 
-        try:
-            db.engine.execute(bidQuery, valueTuple)
-        except exc.SQLAlchemyError:
-            flash('Bid submission not successful. please make sure you have entered the correct details', 'message')
-            return redirect(url_for('studentUsers.submitBids'))
+        db.engine.execute(bidQuery, valueTuple)
+
+        # try:
+        #     db.engine.execute(bidQuery, valueTuple)
+        # except exc.SQLAlchemyError:
+        #     flash('Bid submission not successful. please make sure you have entered the correct details', 'message')
+        #     return redirect(url_for('studentUsers.submitBids'))
             
         flash('Bid submitted, please check your bidding result', 'message')
         return redirect(url_for('studentUsers.studentHome'))

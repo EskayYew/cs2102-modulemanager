@@ -195,9 +195,7 @@ BEGIN
 	RETURN;
 END
 $t_c$ LANGUAGE plpgsql;
-				       
-				       
-				      				       
+				              
 -- This trigger is fired for addition that results in a cycle and will delete the triggering entry with detailed warning provided				       
 CREATE OR REPLACE FUNCTION remove_cyclic_prereq()
 RETURNS TRIGGER AS
@@ -216,15 +214,16 @@ BEGIN
 	   )
 	THEN
 		DELETE FROM Prerequisites P WHERE P.want = new.want AND P.need = new.need; 
-		RAISE NOTICE 'Error: adding % as a prerequisite for % results in a cyclic dependency', new.want, new.need;
-	RETURN NULL;
+		RAISE EXCEPTION 'Error: Cyclic dependency detected';
 	END IF;
+	RETURN NULL;
 END;
 $rcp$ LANGUAGE plpgsql;
+
 CREATE TRIGGER detect_cycle
 AFTER INSERT ON Prerequisites
 FOR EACH ROW
-EXECUTE PROCEDURE remove_cyclic_prereq()
+EXECUTE PROCEDURE remove_cyclic_prereq();
 				       
 -- DFS to find all the modules to be completed for student (id) to qualify for the module (wantt)				       
 CREATE OR REPLACE FUNCTION DFS_fulfill(student_id varchar(100), wantt varchar(100), need varchar(100)[])
