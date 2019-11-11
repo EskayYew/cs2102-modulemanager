@@ -1,4 +1,4 @@
-CREATE TABLE WebUsers (
+CREATE TABLE webusers (
 	id varchar(100) PRIMARY KEY,
 	password varchar(100) NOT NULL,
 	is_super boolean DEFAULT False NOT NULL
@@ -8,7 +8,7 @@ CREATE TABLE WebAdmins (
 	id varchar(100) PRIMARY KEY,
 	name varchar(100),
 	contact varchar(100), -- Can display relevant people in-charge
-	FOREIGN KEY (id) REFERENCES Users ON DELETE CASCADE
+	FOREIGN KEY (id) REFERENCES webusers ON DELETE CASCADE
 );
 
 CREATE TABLE Students (
@@ -16,7 +16,7 @@ CREATE TABLE Students (
 	name varchar(100) NOT NULL,
 	--Remove cap, it's hard to calculate. cap numeric DEFAULT 0 ,
 	enroll DATE NOT NULL,
-	FOREIGN KEY (id) REFERENCES Users ON DELETE CASCADE ON UPDATE CASCADE
+	FOREIGN KEY (id) REFERENCES webusers ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE Exchanges (
@@ -40,7 +40,7 @@ CREATE TABLE Majors (
 );
 --Has minor
 CREATE TABLE Minoring (
-	  varchar(100) NOT NULL REFERENCES Students ON DELETE CASCADE ON UPDATE CASCADE,
+	id varchar(100) NOT NULL REFERENCES Students ON DELETE CASCADE ON UPDATE CASCADE,
 	min_name varchar(100) NOT NULL REFERENCES Minors ON DELETE CASCADE ON UPDATE CASCADE,
 	PRIMARY KEY (id,min_name)
 );
@@ -55,7 +55,7 @@ CREATE TABLE Majoring (
 CREATE TABLE Modules (
 	modcode varchar(100) PRIMARY KEY,
 	modname varchar(100) NOT NULL,
-	description text, 
+	descriptions text, 
 	fname varchar(100) DEFAULT 'NUS' NOT NULL REFERENCES Faculties ON DELETE SET DEFAULT, -- faculty owns a module,	
 	workload int NOT NULL
 );
@@ -74,7 +74,7 @@ CREATE TYPE mood AS ENUM ('monday', 'tuesday', 'wednesday', 'thursday', 'friday'
 CREATE TABLE Slots (
 	lnum integer,
 	modcode varchar(100),
-	d mood,
+	d varchar(10),
 	t_start time,
 	t_end time,
 	FOREIGN KEY (lnum, modcode) REFERENCES Lectures,
@@ -99,7 +99,7 @@ CREATE TABLE Preclusions(
 
 CREATE TABLE Bids(
 	id varchar(100) NOT NULL REFERENCES Students,
-	id_req varchar(100) NOT NULL REFERENCES WebUsers,
+	id_req varchar(100) NOT NULL REFERENCES webusers,
 	modcode varchar(100) NOT NULL,
 	lnum int NOT NULL,
 	bid_time timestamp with time zone,
@@ -123,4 +123,4 @@ CREATE TABLE Completions(
 	PRIMARY KEY(id, modcode)
 );
 
-INSERT INTO Users VALUES ('sample','sample');
+INSERT INTO webusers VALUES ('sample','sample');

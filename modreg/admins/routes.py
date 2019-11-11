@@ -20,10 +20,6 @@ def adminViewModule():
     modules=db.engine.execute(query).fetchall()
     return render_template('admin/viewModules.html',modules=modules)    
 
-@admins.route("/admin/addmodule")
-def adminAddModule():
-    return render_template('admin/addModule.html')
-
 @admins.route("/admin/viewlectures/<modcode>")
 def adminEditModule(modcode):
     query="""   
@@ -33,7 +29,6 @@ def adminEditModule(modcode):
     """
 
     lectures=db.engine.execute(query, modcode).fetchall()
-    print(lectures)
     return render_template('admin/viewLectures.html', lectures=lectures, modcode=modcode)
 
 @admins.route("/admin/viewslots/<modcode>/<lnum>")
@@ -47,7 +42,7 @@ def adminViewSlots(modcode, lnum):
     """
     slots = db.engine.execute(slotsquery, slot).fetchall()
 
-    return render_template('admin/viewSlots.html', slots=slots)
+    return render_template('admin/viewSlots.html', slots=slots, modcode=modcode, lnum=lnum)
 
 @admins.route("/admin/viewOneSlot/<modcode>/<lnum>/<day>")
 def adminViewOneSlot(modcode, lnum, day):
@@ -61,7 +56,6 @@ def adminViewOneSlot(modcode, lnum, day):
     """
 
     students = db.engine.execute(studentsquery, slot).fetchall()
-    print(students[0])
 
     return render_template('admin/viewOneSlot.html', students=students)
 
@@ -71,13 +65,27 @@ def adminAddLecture(modcode):
     if form.validate_on_submit():
         datatuple=(form.lnum.data, modcode, form.quota.data, form.deadline.data)
         query = """
-        INSERT INTO lectures
+        INSERT INTO lectures (lnum, modcode, quota, deadline)
         VALUES (%s,%s,%s,%s);
         """
         db.engine.execute(query,datatuple)
         return redirect(url_for('admins.adminEditModule', modcode=modcode))
     
-    return render_template('admin/addLecture.html', form=form)
+    return render_template('admin/addLecture.html', form=form, modcode=modcode)
+
+@admins.route("/admin/addslot/<modcode>/<lnum>", methods=['GET','POST'])
+def adminAddSlot(modcode,lnum):
+    form=AddSlotForm()
+    if form.validate_on_submit():
+        datatuple=(lnum, modcode, form.t_start.data, form.t_end.data, form.day.data)
+        query = """
+        INSERT INTO slots (lnum,modcode,t_start,t_end,day)
+        VALUES (%s,%s,%s,%s,%s);
+        """
+        db.engine.execute(query,datatuple)
+        return redirect(url_for('admins.adminViewSlots', modcode=modcode, lnum=lnum))
+    
+    return render_template('admin/addSlot.html', form=form, lnum=lnum, modcode=modcode)
     
 
 
